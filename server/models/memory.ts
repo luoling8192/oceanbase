@@ -1,5 +1,5 @@
 import process from 'node:process'
-import { asc, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 import { embed } from 'xsai'
 import { db } from '../db'
 import { memories } from '../db/schema'
@@ -40,13 +40,10 @@ export async function retrieveMemories(userId: string, query: string) {
     model: process.env.LLM_EMBEDDING_MODEL || '',
   })
 
-  const results = await db.execute(sql`
-    SELECT * FROM memories
-    WHERE user_id = ${userId}
-    ORDER BY
-      (embedding <=> ${queryEmbedding})
-    LIMIT 5
-  `)
+  const results = await db.select()
+    .from(memories)
+    .where(sql`user_id = ${userId}`)
+    .limit(5)
 
   console.log(`[MEMORY RETRIEVE] Found ${results.length} memories`)
   return results

@@ -56,10 +56,14 @@ When speaking with users:
    - Key points from conversation (type: "key_point")
 
 2. Use the retrieve_memories tool to recall relevant information when:
+   - User asks what information you have stored about them
+   - User asks about previous conversations
    - Making personalized recommendations
    - Continuing previous conversations
    - Providing consistent responses
    - Adapting to user's knowledge level
+
+IMPORTANT: ALWAYS use retrieve_memories when a user asks what information you have about them or mentions their stored data. This is critical for transparency.
 
 Always store important information and retrieve relevant memories to provide a personalized experience.`,
         },
