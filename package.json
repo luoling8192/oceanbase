@@ -5,7 +5,7 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite --port 3334 --open",
-    "dev:server": "listhen server/index.ts --port 3100",
+    "dev:server": "tsx server/index.ts --port 3100",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "typecheck": "vue-tsc",

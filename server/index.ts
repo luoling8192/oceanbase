@@ -1,17 +1,26 @@
 import process from 'node:process'
 import { configDotenv } from 'dotenv'
-import { createApp, createRouter, defineEventHandler, readBody } from 'h3'
+import { createApp, createRouter, defineEventHandler, readBody, toNodeListener } from 'h3'
+import { listen } from 'listhen'
 import { generateText } from 'xsai'
+// export default app
+
 import { retrieveMemoriesTool, storeMemoryTool } from './tools/memory'
 
 configDotenv()
 
 // Initialize XSai with API keys
-const llmConfig = {
+const llmToolConfig = {
   apiKey: process.env.LLM_TOOL_API_KEY || '',
   baseURL: process.env.LLM_TOOL_API_BASEURL || '',
   model: process.env.LLM_TOOL_MODEL || '',
 }
+
+// const llmCompletionConfig = {
+//   apiKey: process.env.LLM_COMPLETION_API_KEY || '',
+//   baseURL: process.env.LLM_COMPLETION_API_BASEURL || '',
+//   model: process.env.LLM_COMPLETION_MODEL || '',
+// }
 
 // Create h3 app and router
 const app = createApp()
@@ -27,11 +36,17 @@ router.post('/chat', defineEventHandler(async (event) => {
     }
   }
 
+  // eslint-disable-next-line no-console
+  console.log({ userId, message })
+
   try {
     // Send message to LLM with tools
     const { text, toolResults } = await generateText({
-      ...llmConfig,
-      messages: [{ role: 'user', content: message }],
+      ...llmToolConfig,
+      messages: [
+        { role: 'system', content: `You are a helpful assistant to choice tools to ` },
+        { role: 'user', content: message },
+      ],
       tools: [await storeMemoryTool, await retrieveMemoriesTool],
       maxSteps: 3,
     })
@@ -46,7 +61,7 @@ router.post('/chat', defineEventHandler(async (event) => {
 
           // Send follow-up message with memories to LLM
           const { text: followupText } = await generateText({
-            ...llmConfig,
+            ...llmToolConfig,
             messages: [
               { role: 'user', content: message },
               { role: 'assistant', content: 'I need to check your previous memories.' },
@@ -70,4 +85,7 @@ router.post('/chat', defineEventHandler(async (event) => {
 }))
 
 app.use(router)
-export default app
+
+listen(toNodeListener(app), {
+  port: process.env.PORT || 3100,
+})
