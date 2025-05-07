@@ -6,16 +6,33 @@
     "build": "vite build",
     "dev": "vite --port 3333 --open",
     "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "typecheck": "vue-tsc",
     "preview": "vite preview",
     "test": "vitest",
     "up": "taze major -I",
-    "postinstall": "npx simple-git-hooks"
+    "postinstall": "npx simple-git-hooks",
+    "server:dev": "tsx watch server/index.ts",
+    "server:build": "tsc -p tsconfig.server.json",
+    "server:start": "node dist/server/index.js",
+    "db:migrate": "tsx server/migrate.ts",
+    "db:generate": "drizzle-kit generate:pg",
+    "dev:all": "concurrently \"pnpm dev\" \"pnpm server:dev\""
   },
   "dependencies": {
     "@vueuse/core": "catalog:frontend",
+    "@xsai/embed": "catalog:",
+    "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "h3": "catalog:",
+    "listhen": "catalog:",
+    "ofetch": "catalog:",
+    "pgvector": "catalog:",
+    "postgres": "catalog:",
+    "valibot": "catalog:",
     "vue": "catalog:frontend",
-    "vue-router": "catalog:frontend"
+    "vue-router": "catalog:frontend",
+    "xsai": "catalog:"
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:dev",
@@ -25,6 +42,7 @@
     "@vitejs/plugin-vue": "catalog:build",
     "@vue-macros/volar": "catalog:dev",
     "@vue/test-utils": "catalog:dev",
+    "drizzle-kit": "catalog:",
     "eslint": "catalog:dev",
     "eslint-plugin-format": "catalog:dev",
     "jsdom": "catalog:build",

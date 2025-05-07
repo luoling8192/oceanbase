@@ -1,0 +1,10 @@
+// tsconfig.server.json
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "outDir": "dist"
+  },
+  "include": ["server/**/*"]
+}

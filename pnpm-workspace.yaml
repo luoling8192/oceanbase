@@ -1,5 +1,17 @@
 packages: []
 
+catalog:
+  '@xsai/embed': ^0.2.0
+  dotenv: ^16.5.0
+  drizzle-kit: ^0.31.1
+  drizzle-orm: ^0.43.1
+  h3: ^1.15.3
+  listhen: ^1.9.0
+  ofetch: ^1.4.1
+  pgvector: ^0.2.0
+  postgres: ^3.4.5
+  valibot: ^1.1.0
+  xsai: ^0.2.0
 catalogs:
 
   build:
