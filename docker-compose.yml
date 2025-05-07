@@ -1,0 +1,17 @@
+services:
+  pgvector:
+    image: ghcr.io/tensorchord/pgvecto-rs:pg17-v0.4.0
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_DATABASE: postgres
+      POSTGRES_PASSWORD: '123456'
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./.postgres/data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -d $$POSTGRES_DB -U $$POSTGRES_USER]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

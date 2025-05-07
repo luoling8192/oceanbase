@@ -34,6 +34,9 @@ catalogs:
     '@xsai/embed':
       specifier: ^0.2.0
       version: 0.2.0
+    dotenv:
+      specifier: ^16.5.0
+      version: 16.5.0
     drizzle-kit:
       specifier: ^0.31.1
       version: 0.31.1
@@ -43,6 +46,9 @@ catalogs:
     h3:
       specifier: ^1.15.3
       version: 1.15.3
+    listhen:
+      specifier: ^1.9.0
+      version: 1.9.0
     ofetch:
       specifier: ^1.4.1
       version: 1.4.1
@@ -52,6 +58,9 @@ catalogs:
     postgres:
       specifier: ^3.4.5
       version: 3.4.5
+    valibot:
+      specifier: ^1.1.0
+      version: 1.1.0
     xsai:
       specifier: ^0.2.0
       version: 0.2.0
@@ -114,6 +123,9 @@ importers:
 
   .:
     dependencies:
+      '@valibot/to-json-schema':
+        specifier: ^1.1.0
+        version: 1.1.0(valibot@1.1.0(typescript@5.8.2))
       '@vueuse/core':
         specifier: catalog:frontend
         version: 13.0.0(vue@3.5.13(typescript@5.8.2))
@@ -121,7 +133,7 @@ importers:
         specifier: 'catalog:'
         version: 0.2.0
       dotenv:
-        specifier: ^16.5.0
+        specifier: 'catalog:'
         version: 16.5.0
       drizzle-orm:
         specifier: 'catalog:'
@@ -130,7 +142,7 @@ importers:
         specifier: 'catalog:'
         version: 1.15.3
       listhen:
-        specifier: ^1.9.0
+        specifier: 'catalog:'
         version: 1.9.0
       ofetch:
         specifier: 'catalog:'
@@ -142,7 +154,7 @@ importers:
         specifier: 'catalog:'
         version: 3.4.5
       valibot:
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0(typescript@5.8.2)
       vue:
         specifier: catalog:frontend
@@ -152,7 +164,7 @@ importers:
         version: 4.5.0(vue@3.5.13(typescript@5.8.2))
       xsai:
         specifier: 'catalog:'
-        version: 0.2.0
+        version: 0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))
     devDependencies:
       '@antfu/eslint-config':
         specifier: catalog:dev
@@ -1596,6 +1608,11 @@ packages:
     resolution: {integrity: sha512-XBWpUP0mHya6yGBwNefhyEa6V7HgYKCxEAY4qhTm/PcAQyBPNmjj97VZJOJkVdUsyuuii7xmq0pXWX/c2aToHQ==}
     cpu: [x64]
     os: [win32]
+
+  '@valibot/to-json-schema@1.1.0':
+    resolution: {integrity: sha512-vpF5NKL5MmqbVVFzp3Z6CuoaYXJB75QxmW+tJNnng9UVUx9Yx+FVCyEm1kIWr05EzkuPI0b/EbVWIs25UL9mNQ==}
+    peerDependencies:
+      valibot: ^1.1.0
 
   '@vitejs/plugin-vue@5.2.3':
     resolution: {integrity: sha512-IYSLEQj4LgZZuoVpdSUCw3dIynTWQgPlaRP6iAvMle4My0HdYwr5g5wQAfwOeHQBmYwEkqF70nRpSilr6PoUDg==}
@@ -5238,6 +5255,10 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.3.2':
     optional: true
 
+  '@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2))':
+    dependencies:
+      valibot: 1.1.0(typescript@5.8.2)
+
   '@vitejs/plugin-vue@5.2.3(vite@6.2.3(@types/node@22.13.14)(jiti@2.4.2)(tsx@4.19.2)(yaml@2.7.0))(vue@3.5.13(typescript@5.8.2))':
     dependencies:
       vite: 6.2.3(@types/node@22.13.14)(jiti@2.4.2)(tsx@4.19.2)(yaml@2.7.0)
@@ -5703,10 +5724,10 @@ snapshots:
     dependencies:
       '@xsai/shared': 0.2.0
 
-  '@xsai/generate-object@0.2.0':
+  '@xsai/generate-object@0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))':
     dependencies:
       '@xsai/generate-text': 0.2.0
-      xsschema: 0.2.0
+      xsschema: 0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))
     transitivePeerDependencies:
       - '@valibot/to-json-schema'
       - '@zod/mini'
@@ -5738,10 +5759,10 @@ snapshots:
 
   '@xsai/shared@0.2.0': {}
 
-  '@xsai/stream-object@0.2.0':
+  '@xsai/stream-object@0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))':
     dependencies:
       '@xsai/stream-text': 0.2.0
-      xsschema: 0.2.0
+      xsschema: 0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))
     transitivePeerDependencies:
       - '@valibot/to-json-schema'
       - '@zod/mini'
@@ -5754,11 +5775,11 @@ snapshots:
     dependencies:
       '@xsai/shared-chat': 0.2.0
 
-  '@xsai/tool@0.2.0':
+  '@xsai/tool@0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))':
     dependencies:
       '@xsai/shared': 0.2.0
       '@xsai/shared-chat': 0.2.0
-      xsschema: 0.2.0
+      xsschema: 0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))
     transitivePeerDependencies:
       - '@valibot/to-json-schema'
       - '@zod/mini'
@@ -8187,20 +8208,20 @@ snapshots:
 
   xmlchars@2.2.0: {}
 
-  xsai@0.2.0:
+  xsai@0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2))):
     dependencies:
       '@xsai/embed': 0.2.0
       '@xsai/generate-image': 0.2.0
-      '@xsai/generate-object': 0.2.0
+      '@xsai/generate-object': 0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))
       '@xsai/generate-speech': 0.2.0
       '@xsai/generate-text': 0.2.0
       '@xsai/generate-transcription': 0.2.0
       '@xsai/model': 0.2.0
       '@xsai/shared': 0.2.0
       '@xsai/shared-chat': 0.2.0
-      '@xsai/stream-object': 0.2.0
+      '@xsai/stream-object': 0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))
       '@xsai/stream-text': 0.2.0
-      '@xsai/tool': 0.2.0
+      '@xsai/tool': 0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2)))
       '@xsai/utils-chat': 0.2.0
       '@xsai/utils-reasoning': 0.2.0
       '@xsai/utils-stream': 0.2.0
@@ -8212,7 +8233,9 @@ snapshots:
       - zod
       - zod-to-json-schema
 
-  xsschema@0.2.0: {}
+  xsschema@0.2.0(@valibot/to-json-schema@1.1.0(valibot@1.1.0(typescript@5.8.2))):
+    optionalDependencies:
+      '@valibot/to-json-schema': 1.1.0(valibot@1.1.0(typescript@5.8.2))
 
   yaml-eslint-parser@1.3.0:
     dependencies:

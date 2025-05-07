@@ -71,12 +71,12 @@ async function sendMessage() {
 
     <div class="chat-input" p-4 border-t="~ gray-200">
       <form flex gap-2 @submit.prevent="sendMessage">
-        <TheInput
+        <input
           v-model="message"
           placeholder="Type your message..."
           w="full"
           @keydown.enter="sendMessage"
-        />
+        >
         <button
           type="submit"
           class="btn"

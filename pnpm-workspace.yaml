@@ -1,6 +1,7 @@
 packages: []
 
 catalog:
+  '@valibot/to-json-schema': ^1.1.0
   '@xsai/embed': ^0.2.0
   dotenv: ^16.5.0
   drizzle-kit: ^0.31.1

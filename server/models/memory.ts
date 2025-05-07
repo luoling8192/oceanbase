@@ -1,17 +1,17 @@
 import process from 'node:process'
 import { sql } from 'drizzle-orm'
-import { db } from 'server/db'
-import { memories } from 'server/db/schema'
 import { embed } from 'xsai'
+import { db } from '../db'
+import { memories } from '../db/schema'
 
 // Store memory function
 export async function storeMemory(userId: string, type: string, content: string) {
   // Generate embedding for the content
   const { embedding } = await embed({
-    apiKey: process.env.OPENAI_API_KEY!,
-    baseURL: 'https://api.openai.com/v1/',
+    apiKey: process.env.LLM_EMBEDDING_API_KEY || '',
+    baseURL: process.env.LLM_EMBEDDING_BASE_URL || '',
     input: content,
-    model: 'text-embedding-3-large',
+    model: process.env.LLM_EMBEDDING_MODEL || '',
   })
 
   // Insert memory into database
@@ -29,10 +29,10 @@ export async function storeMemory(userId: string, type: string, content: string)
 export async function retrieveMemories(userId: string, query: string) {
   // Generate embedding for the query
   const { embedding: queryEmbedding } = await embed({
-    apiKey: process.env.OPENAI_API_KEY!,
-    baseURL: 'https://api.openai.com/v1/',
+    apiKey: process.env.LLM_EMBEDDING_API_KEY || '',
+    baseURL: process.env.LLM_EMBEDDING_BASE_URL || '',
     input: query,
-    model: 'text-embedding-3-large',
+    model: process.env.LLM_EMBEDDING_MODEL || '',
   })
 
   // Perform vector search using L2 distance

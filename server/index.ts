@@ -10,7 +10,7 @@ configDotenv()
 const llmConfig = {
   apiKey: process.env.LLM_TOOL_API_KEY || '',
   baseURL: process.env.LLM_TOOL_API_BASEURL || '',
-  model: process.env.LLM_TOOL_MODEL || 'claude-3-haiku-20240307',
+  model: process.env.LLM_TOOL_MODEL || '',
 }
 
 // Create h3 app and router

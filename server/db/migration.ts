@@ -6,7 +6,7 @@ import postgres from 'postgres'
 
 // Migration script
 async function runMigration() {
-  const connectionString = process.env.DATABASE_URL || 'postgres://user:password@localhost:5432/chat_app'
+  const connectionString = process.env.DATABASE_DSN || 'postgres://user:password@localhost:5432/chat_app'
   const sql = postgres(connectionString, { max: 1 })
   const db = drizzle(sql)
 

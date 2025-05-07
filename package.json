@@ -4,7 +4,8 @@
   "packageManager": "pnpm@10.7.0",
   "scripts": {
     "build": "vite build",
-    "dev": "vite --port 3333 --open",
+    "dev": "vite --port 3334 --open",
+    "dev:server": "listhen server/index.ts --port 3100",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "typecheck": "vue-tsc",
@@ -12,14 +13,12 @@
     "test": "vitest",
     "up": "taze major -I",
     "postinstall": "npx simple-git-hooks",
-    "server:dev": "tsx watch server/index.ts",
-    "server:build": "tsc -p tsconfig.server.json",
-    "server:start": "node dist/server/index.js",
-    "db:migrate": "tsx server/migrate.ts",
-    "db:generate": "drizzle-kit generate:pg",
-    "dev:all": "concurrently \"pnpm dev\" \"pnpm server:dev\""
+    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@valibot/to-json-schema": "catalog:",
     "@vueuse/core": "catalog:frontend",
     "@xsai/embed": "catalog:",
     "dotenv": "catalog:",

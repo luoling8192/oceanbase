@@ -1,33 +1,18 @@
 <script setup lang="ts">
-defineOptions({
-  name: 'IndexPage',
-})
-
-const router = useRouter()
-function goToChat() {
-  router.push('/chat')
-}
+import ChatInterface from '../components/ChatInterface.vue'
 </script>
 
 <template>
-  <div>
-    <div i-carbon-campsite text-4xl inline-block />
-    <p>
-      Memory-Enhanced Chat Application
-    </p>
-    <p>
-      <em text-sm op75>AI chat with memory management</em>
-    </p>
+  <div class="mx-auto flex flex-col h-screen max-w-2xl container">
+    <header p-4 border-b="~ gray-200">
+      <h1 text-xl font-bold>
+        Memory-Enhanced Chat
+      </h1>
+      <p text-sm text-gray-500>
+        Talk with our AI that remembers your interests and learning goals
+      </p>
+    </header>
 
-    <div py-4 />
-
-    <div>
-      <button
-        class="btn"
-        @click="goToChat"
-      >
-        Start Chatting
-      </button>
-    </div>
+    <ChatInterface class="flex-1" />
   </div>
 </template>
