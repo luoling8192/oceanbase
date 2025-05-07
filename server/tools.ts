@@ -1,6 +1,6 @@
 import { tool } from '@xsai/tool'
 import * as v from 'valibot'
-import { retrieveMemories, storeMemory } from '../models/memory'
+import { retrieveMemories, storeMemory } from './models'
 
 // Define tools using @xsai/tool
 export const storeMemoryTool = tool({

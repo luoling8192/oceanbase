@@ -1,8 +1,8 @@
 import process from 'node:process'
-import { sql } from 'drizzle-orm'
+import { cosineDistance, sql } from 'drizzle-orm'
 import { embed } from 'xsai'
-import { db } from '../db'
-import { memories } from '../db/schema'
+import { db } from './db'
+import { memories } from './db/schema'
 
 // Store memory function
 export async function storeMemory(userId: string, type: string, content: string) {
@@ -40,10 +40,25 @@ export async function retrieveMemories(userId: string, query: string) {
     model: process.env.LLM_EMBEDDING_MODEL || '',
   })
 
-  const results = await db.select()
-    .from(memories)
-    .where(sql`user_id = ${userId}`)
-    .limit(5)
+  // Calculate cosine similarity and time relevance for ranking
+  const timeRelevance = sql<number>`(1 - (CEIL(EXTRACT(EPOCH FROM NOW()) * 1000)::bigint - memories.created_at) / 86400 / 30)`
+  const similarity = sql<number>`(1 - (1 - ${cosineDistance(memories.embedding, queryEmbedding)}))`
+  const combinedScore = sql<number>`((0.8 * ${similarity}) + (0.2 * ${timeRelevance}))`
+
+  // Query memories with similarity and time-based ranking
+  const results = await db.execute(sql`
+    SELECT
+      memories.*,
+      ${similarity} AS similarity,
+      ${timeRelevance} AS time_relevance,
+      ${combinedScore} AS combined_score
+    FROM memories
+    WHERE
+      user_id = ${userId}
+      AND (1 - (1 - ${cosineDistance(memories.embedding, queryEmbedding)})) > 0.5
+    ORDER BY combined_score DESC
+    LIMIT 5
+  `)
 
   console.log(`[MEMORY RETRIEVE] Found ${results.length} memories`)
   return results

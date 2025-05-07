@@ -61,12 +61,6 @@ async function handleSendMessage() {
   userInput.value = ''
 
   try {
-    // Analyze user input to determine if it should be stored as memory
-    // For example, if user is sharing interests
-    if (input.toLowerCase().includes('我喜欢') || input.toLowerCase().includes('我感兴趣')) {
-      await storeMemory('interest', input)
-    }
-
     // 1. Get memories
     const memories = await fetchMemories(input)
 
@@ -109,7 +103,7 @@ async function handleSendMessage() {
 // Fetch relevant memories from backend API
 async function fetchMemories(query: string): Promise<Memory[]> {
   try {
-    const data = await ofetch('/api/memories', {
+    const data = await ofetch('/api/memories/retrieve', {
       method: 'POST',
       body: { userId: userId.value, query },
     })

@@ -3,10 +3,8 @@ import { config } from 'dotenv'
 import { createApp, createRouter, defineEventHandler, readBody, toNodeListener } from 'h3'
 import { listen } from 'listhen'
 import { generateText } from 'xsai'
-// export default app
-
-import { retrieveMemories, storeMemory } from './models/memory'
-import { retrieveMemoriesTool, storeMemoryTool } from './tools/memory'
+import { systemMessage } from './prompt'
+import { retrieveMemoriesTool, storeMemoryTool } from './tools'
 
 config()
 
@@ -17,102 +15,12 @@ const llmToolConfig = {
   model: process.env.LLM_TOOL_MODEL || '',
 }
 
-// const llmCompletionConfig = {
-//   apiKey: process.env.LLM_COMPLETION_API_KEY || '',
-//   baseURL: process.env.LLM_COMPLETION_API_BASEURL || '',
-//   model: process.env.LLM_COMPLETION_MODEL || '',
-// }
-
 // Create h3 app and router
 const app = createApp()
 const router = createRouter()
 
-// Chat endpoint
-router.post('/chat', defineEventHandler(async (event) => {
-  const { userId, message } = await readBody(event)
-
-  if (!userId || !message) {
-    return {
-      error: 'Missing userId or message',
-    }
-  }
-
-  // eslint-disable-next-line no-console
-  console.log({ userId, message })
-
-  try {
-    // Send message to LLM with tools
-    const { text, toolResults } = await generateText({
-      ...llmToolConfig,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a helpful assistant with memory capabilities. You can store and retrieve user memories.
-
-When speaking with users:
-1. Use the store_memory tool to save important information such as:
-   - User interests (type: "interest")
-   - Learning goals (type: "learning_goal")
-   - Knowledge level (type: "knowledge_level")
-   - Key points from conversation (type: "key_point")
-
-2. Use the retrieve_memories tool to recall relevant information when:
-   - User asks what information you have stored about them
-   - User asks about previous conversations
-   - Making personalized recommendations
-   - Continuing previous conversations
-   - Providing consistent responses
-   - Adapting to user's knowledge level
-
-IMPORTANT: ALWAYS use retrieve_memories when a user asks what information you have about them or mentions their stored data. This is critical for transparency.
-
-Always store important information and retrieve relevant memories to provide a personalized experience.`,
-        },
-        { role: 'user', content: message },
-      ],
-      tools: [await storeMemoryTool, await retrieveMemoriesTool],
-      maxSteps: 3,
-    })
-
-    console.log('[TOOLS USED]', toolResults?.map(r => r.toolName).join(', ') || 'None')
-
-    // Check if any memory retrieval tools were executed
-    if (toolResults && toolResults.length > 0) {
-      for (const result of toolResults) {
-        // If this is a memory retrieval result
-        if (result.toolName === 'retrieve_memories' && Array.isArray(result.result)) {
-          // Format the retrieved memories
-          const memoryContext = result.result.map((m: any) => `${m.type}: ${m.content}`).join('\n')
-          console.log('[MEMORY CONTEXT]', memoryContext)
-
-          // Send follow-up message with memories to LLM
-          const { text: followupText } = await generateText({
-            ...llmToolConfig,
-            messages: [
-              { role: 'system', content: 'You are a helpful assistant with access to user memories. Use these memories to provide a personalized response.' },
-              { role: 'user', content: message },
-              { role: 'assistant', content: 'I need to check your previous memories.' },
-              { role: 'user', content: `Relevant memories:\n${memoryContext}\n\nPlease continue.` },
-            ],
-          })
-          return { text: followupText }
-        }
-      }
-    }
-
-    return { text }
-  }
-  catch (error) {
-    console.error('Error processing message:', error)
-    return {
-      error: 'Failed to process message',
-      details: error instanceof Error ? error.message : String(error),
-    }
-  }
-}))
-
-// 在 router 中添加一个新的端点
-router.post('/memories', defineEventHandler(async (event) => {
+// Memory retrieval endpoint (using LLM function calling)
+router.post('/memories/retrieve', defineEventHandler(async (event) => {
   const { userId, query } = await readBody(event)
 
   if (!userId || !query) {
@@ -122,17 +30,30 @@ router.post('/memories', defineEventHandler(async (event) => {
     }
   }
 
-  console.log(`[API] Memories request for ${userId} with query: ${query}`)
+  console.log(`[API] Memories retrieval request for ${userId} with query: ${query}`)
 
   try {
-    // 调用记忆检索函数
-    const memories = await retrieveMemories(userId, query)
+    // Use LLM with the retrieval tool
+    const { toolResults } = await generateText({
+      ...llmToolConfig,
+      messages: [
+        { role: 'system', content: 'You are a memory retrieval assistant. Use the retrieve_memories tool to find relevant memories for the user.' },
+        { role: 'user', content: `Retrieve memories related to: ${query}` },
+      ],
+      tools: [await retrieveMemoriesTool],
+      maxSteps: 1,
+    })
 
-    console.log(`[API] Found ${memories.length} memories`)
-
-    return {
-      memories,
+    // Extract the retrieved memories from tool results
+    if (toolResults && toolResults.length > 0) {
+      const result = toolResults[0]
+      if (result.toolName === 'retrieve_memories' && Array.isArray(result.result)) {
+        console.log(`[API] Found ${result.result.length} memories via LLM tool call`)
+        return { memories: result.result }
+      }
     }
+
+    return { memories: [] }
   }
   catch (error) {
     console.error('Error retrieving memories:', error)
@@ -144,26 +65,41 @@ router.post('/memories', defineEventHandler(async (event) => {
   }
 }))
 
-// 添加存储记忆的 API 端点
+// Memory storage endpoint (using LLM function calling)
 router.post('/memories/store', defineEventHandler(async (event) => {
-  const { userId, type, content } = await readBody(event)
+  const { userId, content, type } = await readBody(event)
 
-  if (!userId || !type || !content) {
+  if (!userId || !content) {
     return {
-      error: 'Missing required fields: userId, type, content',
+      error: 'Missing required fields: userId, content',
       success: false,
     }
   }
 
-  console.log(`[API] Store memory request for ${userId}, type: ${type}`)
+  console.log(`[API] Store memory request for ${userId}`)
 
   try {
-    // 调用存储函数
-    const result = await storeMemory(userId, type, content)
-    return {
-      success: true,
-      message: 'Memory stored successfully',
+    // Use LLM with the storage tool
+    const { toolResults } = await generateText({
+      ...llmToolConfig,
+      messages: [
+        { role: 'system', content: 'You are a memory storage assistant. Analyze the content and store it appropriately using the store_memory tool.' },
+        { role: 'user', content: `Store this information for user ${userId}: ${content}${type ? ` (type: ${type})` : ''}` },
+      ],
+      tools: [await storeMemoryTool],
+      maxSteps: 1,
+    })
+
+    // Check if memory was stored successfully
+    if (toolResults && toolResults.length > 0) {
+      const result = toolResults[0]
+      if (result.toolName === 'store_memory') {
+        console.log(`[API] Memory stored successfully via LLM tool call`)
+        return { success: true, message: 'Memory stored successfully' }
+      }
     }
+
+    return { success: false, error: 'LLM did not store the memory' }
   }
   catch (error) {
     console.error('Error storing memory:', error)
@@ -171,6 +107,43 @@ router.post('/memories/store', defineEventHandler(async (event) => {
       error: 'Failed to store memory',
       details: error instanceof Error ? error.message : String(error),
       success: false,
+    }
+  }
+}))
+
+// Chat endpoint to handle both memory retrieval and storage via LLM
+router.post('/chat', defineEventHandler(async (event) => {
+  const { userId, message } = await readBody(event)
+
+  if (!userId || !message) {
+    return {
+      error: 'Missing userId or message',
+    }
+  }
+
+  console.log(`[API] Chat request from ${userId}: ${message}`)
+
+  try {
+    // Send message to LLM with tools
+    const { text, toolResults } = await generateText({
+      ...llmToolConfig,
+      messages: [
+        { role: 'system', content: systemMessage },
+        { role: 'user', content: message },
+      ],
+      tools: [await storeMemoryTool, await retrieveMemoriesTool],
+      maxSteps: 3,
+    })
+
+    console.log('[TOOLS USED]', toolResults?.map(r => r.toolName).join(', ') || 'None')
+
+    return { text, toolResults }
+  }
+  catch (error) {
+    console.error('Error processing message:', error)
+    return {
+      error: 'Failed to process message',
+      details: error instanceof Error ? error.message : String(error),
     }
   }
 }))
