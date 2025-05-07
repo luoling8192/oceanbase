@@ -1,11 +1,13 @@
 import process from 'node:process'
-import { sql } from 'drizzle-orm'
+import { asc, sql } from 'drizzle-orm'
 import { embed } from 'xsai'
 import { db } from '../db'
 import { memories } from '../db/schema'
 
 // Store memory function
 export async function storeMemory(userId: string, type: string, content: string) {
+  console.log(`[MEMORY STORE] Storing memory for user: ${userId}, type: ${type}`)
+
   // Generate embedding for the content
   const { embedding } = await embed({
     apiKey: process.env.LLM_EMBEDDING_API_KEY || '',
@@ -22,11 +24,14 @@ export async function storeMemory(userId: string, type: string, content: string)
     embedding,
   })
 
+  console.log(`[MEMORY STORE] Successfully stored memory`)
   return { success: true, message: 'Memory stored successfully' }
 }
 
 // Retrieve memories function
 export async function retrieveMemories(userId: string, query: string) {
+  console.log(`[MEMORY RETRIEVE] Retrieving memories for user: ${userId}, query: ${query}`)
+
   // Generate embedding for the query
   const { embedding: queryEmbedding } = await embed({
     apiKey: process.env.LLM_EMBEDDING_API_KEY || '',
@@ -35,12 +40,14 @@ export async function retrieveMemories(userId: string, query: string) {
     model: process.env.LLM_EMBEDDING_MODEL || '',
   })
 
-  // Perform vector search using L2 distance
-  const results = await db.select()
-    .from(memories)
-    .where(sql`user_id = ${userId}`)
-    .orderBy(sql`embedding <-> ${queryEmbedding}`)
-    .limit(5)
+  const results = await db.execute(sql`
+    SELECT * FROM memories
+    WHERE user_id = ${userId}
+    ORDER BY
+      (embedding <=> ${queryEmbedding})
+    LIMIT 5
+  `)
 
+  console.log(`[MEMORY RETRIEVE] Found ${results.length} memories`)
   return results
 }
