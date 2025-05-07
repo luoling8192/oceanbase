@@ -5,6 +5,7 @@ import { listen } from 'listhen'
 import { generateText } from 'xsai'
 // export default app
 
+import { retrieveMemories, storeMemory } from './models/memory'
 import { retrieveMemoriesTool, storeMemoryTool } from './tools/memory'
 
 config()
@@ -106,6 +107,70 @@ Always store important information and retrieve relevant memories to provide a p
     return {
       error: 'Failed to process message',
       details: error instanceof Error ? error.message : String(error),
+    }
+  }
+}))
+
+// 在 router 中添加一个新的端点
+router.post('/memories', defineEventHandler(async (event) => {
+  const { userId, query } = await readBody(event)
+
+  if (!userId || !query) {
+    return {
+      error: 'Missing userId or query',
+      memories: [],
+    }
+  }
+
+  console.log(`[API] Memories request for ${userId} with query: ${query}`)
+
+  try {
+    // 调用记忆检索函数
+    const memories = await retrieveMemories(userId, query)
+
+    console.log(`[API] Found ${memories.length} memories`)
+
+    return {
+      memories,
+    }
+  }
+  catch (error) {
+    console.error('Error retrieving memories:', error)
+    return {
+      error: 'Failed to retrieve memories',
+      details: error instanceof Error ? error.message : String(error),
+      memories: [],
+    }
+  }
+}))
+
+// 添加存储记忆的 API 端点
+router.post('/memories/store', defineEventHandler(async (event) => {
+  const { userId, type, content } = await readBody(event)
+
+  if (!userId || !type || !content) {
+    return {
+      error: 'Missing required fields: userId, type, content',
+      success: false,
+    }
+  }
+
+  console.log(`[API] Store memory request for ${userId}, type: ${type}`)
+
+  try {
+    // 调用存储函数
+    const result = await storeMemory(userId, type, content)
+    return {
+      success: true,
+      message: 'Memory stored successfully',
+    }
+  }
+  catch (error) {
+    console.error('Error storing memory:', error)
+    return {
+      error: 'Failed to store memory',
+      details: error instanceof Error ? error.message : String(error),
+      success: false,
     }
   }
 }))
