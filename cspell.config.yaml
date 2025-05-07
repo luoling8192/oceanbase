@@ -1,7 +1,8 @@
 words:
-  - xsai
-  - valibot
   - drizzle-orm
   - h3
-  - process
   - node:process
+  - ofetch
+  - process
+  - valibot
+  - xsai

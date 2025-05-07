@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { ofetch } from 'ofetch'
 import { onMounted, ref } from 'vue'
 import { generateText } from 'xsai'
-import ChatInterface from '../components/ChatInterface.vue'
 
-// 定义类型
+// Define types
 interface Message {
   role: 'user' | 'assistant' | 'system'
   content: string
@@ -17,35 +17,30 @@ interface Memory {
   createdAt: string
 }
 
-// 状态变量
-const userId = ref('洛灵 / RainbowBird') // 可以从登录状态获取
+// State variables
+const userId = ref('洛灵 / RainbowBird') // Can be retrieved from login state
 const messages = ref<Message[]>([])
 const isLoading = ref(false)
+const userInput = ref('')
 
-// 配置 xsai
+// Configure xsai
 const llmConfig = {
   apiKey: import.meta.env.VITE_LLM_COMPLETION_API_KEY || '',
   baseURL: import.meta.env.VITE_LLM_COMPLETION_API_BASEURL || '',
   model: import.meta.env.VITE_LLM_COMPLETION_MODEL || '',
 }
 
-// 存储记忆到后端
+// Store memory to backend
 async function storeMemory(type: string, content: string) {
   try {
-    const response = await fetch('/api/memories/store', {
+    const data = await ofetch('/api/memories/store', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+      body: {
         userId: userId.value,
         type,
         content,
-      }),
+      },
     })
-
-    if (!response.ok)
-      throw new Error('Failed to store memory')
-
-    const data = await response.json()
     return data.success
   }
   catch (error) {
@@ -54,46 +49,50 @@ async function storeMemory(type: string, content: string) {
   }
 }
 
-// 发送消息到 AI
-async function sendMessage(userInput: string) {
-  if (!userInput.trim())
+// Handle sending message
+async function handleSendMessage() {
+  const input = userInput.value.trim()
+  if (!input || isLoading.value)
     return
 
-  // 显示用户消息
-  messages.value.push({ role: 'user', content: userInput })
+  // Display user message
+  messages.value.push({ role: 'user', content: input })
   isLoading.value = true
+  userInput.value = ''
 
   try {
-    // 可以在这里分析用户输入并决定是否存储为记忆
-    // 例如，如果检测到用户在分享兴趣
-    if (userInput.toLowerCase().includes('我喜欢') || userInput.toLowerCase().includes('我感兴趣')) {
-      await storeMemory('interest', userInput)
+    // Analyze user input to determine if it should be stored as memory
+    // For example, if user is sharing interests
+    if (input.toLowerCase().includes('我喜欢') || input.toLowerCase().includes('我感兴趣')) {
+      await storeMemory('interest', input)
     }
 
-    // 1. 获取记忆
-    const memories = await fetchMemories(userInput)
+    // 1. Get memories
+    const memories = await fetchMemories(input)
 
-    // 2. 将记忆添加到对话上下文
+    // 2. Add memories to conversation context
     const contextWithMemories = buildContextWithMemories(memories)
 
-    // 3. 使用 xsai 直接向 LLM 发送请求
+    // 3. Send request to LLM using xsai
     const response = await generateText({
       ...llmConfig,
       messages: [
-        // 系统提示
+        // System prompt
         {
           role: 'system',
           content: '你是一个有记忆能力的助手，能够记住用户的兴趣、学习目标和知识水平。请基于用户的记忆提供个性化回复。',
         },
-        // 记忆上下文
+        // Memory context
         ...contextWithMemories,
-        // 用户当前消息
-        { role: 'user', content: userInput },
+        // Current user message
+        { role: 'user', content: input },
       ],
     })
 
-    // 添加助手回复
-    messages.value.push({ role: 'assistant', content: response.text })
+    // Add assistant reply
+    if (response.text) {
+      messages.value.push({ role: 'assistant', content: response.text })
+    }
   }
   catch (error) {
     console.error('Error sending message:', error)
@@ -107,19 +106,13 @@ async function sendMessage(userInput: string) {
   }
 }
 
-// 从后端 API 获取相关记忆
+// Fetch relevant memories from backend API
 async function fetchMemories(query: string): Promise<Memory[]> {
   try {
-    const response = await fetch('/api/memories', {
+    const data = await ofetch('/api/memories', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: userId.value, query }),
+      body: { userId: userId.value, query },
     })
-
-    if (!response.ok)
-      throw new Error('Failed to fetch memories')
-
-    const data = await response.json()
     return data.memories || []
   }
   catch (error) {
@@ -128,12 +121,12 @@ async function fetchMemories(query: string): Promise<Memory[]> {
   }
 }
 
-// 构建包含记忆的对话上下文
+// Build conversation context with memories
 function buildContextWithMemories(memories: Memory[]): Message[] {
   if (!memories.length)
     return []
 
-  // 将记忆格式化为有意义的上下文信息
+  // Format memories into meaningful context
   const memoryText = memories
     .map(m => `${m.type}: ${m.content}`)
     .join('\n')
@@ -146,7 +139,7 @@ function buildContextWithMemories(memories: Memory[]): Message[] {
   ]
 }
 
-// 在组件挂载时可以初始化一些欢迎消息
+// Initialize welcome message on component mount
 onMounted(() => {
   messages.value.push({
     role: 'assistant',
@@ -166,11 +159,56 @@ onMounted(() => {
       </p>
     </header>
 
-    <ChatInterface
-      class="flex-1"
-      :messages="messages"
-      :is-loading="isLoading"
-      @send="sendMessage"
-    />
+    <div class="chat-container" flex="~ col" h="full">
+      <div class="chat-messages" flex="~ col" p-4 flex-1 gap-4 overflow-y-auto>
+        <template v-if="messages.length === 0">
+          <div text-gray-500 p-4 text-center>
+            开始对话！我会记住你的兴趣和学习目标。
+          </div>
+        </template>
+
+        <div
+          v-for="(msg, index) in messages"
+          v-show="msg.role !== 'system'"
+          :key="index"
+          class="message p-3 rounded-lg max-w-4/5"
+          :class="[
+            msg.role === 'user' ? 'self-end bg-teal-500 text-white'
+            : msg.role === 'system' ? 'self-center bg-gray-100 text-gray-500 italic text-sm'
+              : 'self-start bg-gray-200',
+          ]"
+        >
+          {{ msg.content }}
+        </div>
+
+        <div v-if="isLoading" p-3 self-start animate-pulse>
+          思考中...
+        </div>
+      </div>
+
+      <div class="chat-input" p-4 border-t="~ gray-200">
+        <form flex gap-2 @submit.prevent="handleSendMessage">
+          <input
+            v-model="userInput"
+            placeholder="输入你的消息..."
+            w="full"
+            p-2
+            border="~ rounded gray-300"
+            focus:outline="none"
+            focus:border="teal-500"
+            @keydown.enter.prevent="handleSendMessage"
+          >
+          <button
+            type="submit"
+            class="text-white px-4 py-2 rounded bg-teal-500 btn"
+            :disabled="!userInput.trim() || isLoading"
+            hover:bg-teal-600
+            disabled:opacity-50
+          >
+            发送
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
