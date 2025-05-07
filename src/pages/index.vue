@@ -31,6 +31,7 @@ const llmConfig = {
 }
 
 // Store memory to backend
+// eslint-disable-next-line unused-imports/no-unused-vars
 async function storeMemory(type: string, content: string) {
   try {
     const data = await ofetch('/api/memories/store', {
@@ -143,7 +144,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex flex-col h-screen max-w-2xl container">
+  <div class="mx-auto text-left flex flex-col h-screen max-w-2xl container">
     <header p-4 border-b="~ gray-200">
       <h1 text-xl font-bold>
         Memory-Enhanced Chat
@@ -194,7 +195,7 @@ onMounted(() => {
           >
           <button
             type="submit"
-            class="text-white px-4 py-2 rounded bg-teal-500 btn"
+            class="text-white px-4 py-2 rounded bg-teal-500 text-nowrap btn"
             :disabled="!userInput.trim() || isLoading"
             hover:bg-teal-600
             disabled:opacity-50
